@@ -1,0 +1,6 @@
+[submodule "third-party/LIEF"]
+	path = third-party/LIEF
+	url = git@github.com:lief-project/LIEF.git
+[submodule "third-party/GMSSL"]
+	path = third-party/GMSSL
+	url = git@github.com:guanzhi/GmSSL.git
