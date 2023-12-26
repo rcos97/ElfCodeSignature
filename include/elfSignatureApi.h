@@ -24,6 +24,9 @@ int ReadElfSection(const char* elfName, const char* sectionName, char* out, unsi
 FBC_API_PUBLIC
 int AddElfSection(const char* elfName, const char* sectionName, const char* newElfName, char* context, unsigned int contextLen);
 
+FBC_API_PUBLIC
+int GetPublicKeyFromCertificate(const char* filePath, unsigned char* out);
+
 #ifdef __cplusplus
 }
 #endif

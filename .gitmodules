@@ -4,3 +4,6 @@
 [submodule "third-party/GMSSL"]
 	path = third-party/GMSSL
 	url = git@github.com:guanzhi/GmSSL.git
+[submodule "third-party/OPENSSL"]
+	path = third-party/OPENSSL
+	url = git@github.com:janbar/openssl-cmake.git

@@ -26,4 +26,8 @@ int main(int argc, char const* argv[]){
 
   AddElfSection("../source/libtest.so", ".aaa", "liba.so", out, textLen);
   AddElfSection("../source/liba.so", ".zzz", "liba.so", out, textLen);
+  unsigned char pub[65];
+  GetPublicKeyFromCertificate("../source/certificate.crt", pub);
+  std:: cout << "publickey :"<<std::endl;
+  printU8((char*)pub, 65);
 }

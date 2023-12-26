@@ -16,15 +16,30 @@ if(EXISTS "${vendorLIEF_submodule_dir}")
   add_subdirectory("${vendorLIEF_submodule_dir}")
 endif()
 
+set(vendorGMSSL_submodule_dir "${CMAKE_CURRENT_LIST_DIR}/third-party/GMSSL")
+
+if(EXISTS "${vendorGMSSL_submodule_dir}")
+  add_subdirectory("${vendorGMSSL_submodule_dir}")
+endif()
+
+set(vendorOPENSSL_submodule_dir "${CMAKE_CURRENT_LIST_DIR}/third-party/OPENSSL")
+
+if(EXISTS "${vendorOPENSSL_submodule_dir}")
+  add_subdirectory("${vendorOPENSSL_submodule_dir}")
+endif()
+
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(PROJECT_NAME_TEST "${PROJECT_NAME}-test")
   add_executable(${PROJECT_NAME_TEST}
     ${PROJECT_SOURCE_DIR}/src/test.cpp
     ${PROJECT_SOURCE_DIR}/src/elf.cpp
+    ${PROJECT_SOURCE_DIR}/src/sign.cpp
   )
-  target_link_libraries(${PROJECT_NAME_TEST} PRIVATE LIEF::LIEF)
+  target_link_libraries(${PROJECT_NAME_TEST} PRIVATE LIEF::LIEF gmssl crypto)
   target_include_directories(${PROJECT_NAME_TEST} PRIVATE
-    ${PROJECT_SOURCE_DIR}/third/LIEF/include
+    ${PROJECT_SOURCE_DIR}/third-party/LIEF/include
+    ${PROJECT_SOURCE_DIR}/third-party/GMSSL/include
+    ${PROJECT_SOURCE_DIR}/third-party/OPENSSL/include
     ${PROJECT_SOURCE_DIR}/include
   )
 endif()
@@ -32,10 +47,13 @@ endif()
 add_executable(${PROJECT_NAME}
   ${PROJECT_SOURCE_DIR}/src/main.cpp
   ${PROJECT_SOURCE_DIR}/src/elf.cpp
+  ${PROJECT_SOURCE_DIR}/src/sign.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE LIEF::LIEF)
+target_link_libraries(${PROJECT_NAME} PRIVATE LIEF::LIEF gmssl crypto)
 target_include_directories(${PROJECT_NAME} PRIVATE
-  ${PROJECT_SOURCE_DIR}/third/LIEF/include
+  ${PROJECT_SOURCE_DIR}/third-party/LIEF/include
+  ${PROJECT_SOURCE_DIR}/third-party/GMSSL/include
+  ${PROJECT_SOURCE_DIR}/third-party/OPENSSL/include
   ${PROJECT_SOURCE_DIR}/include
 )
