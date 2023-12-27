@@ -30,4 +30,10 @@ int main(int argc, char const* argv[]){
   GetPublicKeyFromCertificate("../source/certificate.crt", pub);
   std:: cout << "publickey :"<<std::endl;
   printU8((char*)pub, 65);
+
+  unsigned char prikey[255];
+  unsigned int priLen;
+  ret = GetPriKeyFromP12File("../source/rcos.pfx","123456",prikey, &priLen);
+  std::cout << ret << std::endl;
+  printU8((char *)prikey, priLen);
 }

@@ -2,7 +2,9 @@
 #include <memory.h>
 #include "openssl/x509.h"
 #include "openssl/pem.h"
+#include "openssl/pkcs12.h"
 #include "elfSignatureApi.h"
+#include "defer.h"
 
 // 读取X509证书的公钥
 int GetPublicKeyFromCertificate(const char* filePath, unsigned char* out){
@@ -43,6 +45,46 @@ int GetPublicKeyFromCertificate(const char* filePath, unsigned char* out){
   }
 
   memcpy(out, publicKeyBytes.data(), length);
+
+  return 1;
+}
+
+int GetPriKeyFromP12File(const char* filePath, const char* password, unsigned char* out, unsigned int* outLen){
+  FILE* p12_file_ptr;
+  EVP_PKEY* evpPkey = NULL;
+  EC_KEY* ecKey = NULL;
+  const BIGNUM* priNUM;
+  int ret = 0;
+
+  if(filePath == NULL || password == NULL || outLen == NULL){
+    return 0;
+  }
+
+  p12_file_ptr = fopen(filePath, "rb");
+  defer(fclose(p12_file_ptr));
+  if(!p12_file_ptr){
+    return 2;
+  }
+
+  PKCS12* p12 = d2i_PKCS12_fp(p12_file_ptr, NULL);
+  defer(PKCS12_free(p12));
+  ret = PKCS12_parse(p12, password, &evpPkey, NULL, NULL);
+  defer(EVP_PKEY_free(evpPkey));
+  if (!ret){
+    return 3;
+  }
+
+  ecKey = EVP_PKEY_get0_EC_KEY(evpPkey);
+  if(ecKey == NULL){
+    return 0;
+  }
+
+  priNUM = EC_KEY_get0_private_key(ecKey);
+  if(priNUM == NULL){
+    return 0;
+  }
+
+  *outLen = BN_bn2bin(priNUM, out);
 
   return 1;
 }
