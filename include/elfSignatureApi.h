@@ -35,7 +35,7 @@ int GetPublicKeyFromCertificate(const char* filePath, unsigned char* out);
  * @param password p12文件密码
  * @param out 原始私钥
  * @param outLen 原始私钥的长度
- * @return 1 成功 0 失败 2 p12文件路径错误 3 p12文件密码不争取
+ * @return 1 成功 0 失败 2 p12文件路径错误 3 p12文件密码不正确
  */
 FBC_API_PUBLIC
 int GetPriKeyFromP12File(const char* filePath, const char* password, unsigned char* out, unsigned int* outLen);
