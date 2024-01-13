@@ -36,4 +36,11 @@ int main(int argc, char const* argv[]){
   ret = GetPriKeyFromP12File("../source/rcos.pfx","123456",prikey, &priLen);
   std::cout << ret << std::endl;
   printU8((char *)prikey, priLen);
+
+  std::cout << "p12 get certificate:"<< std::endl;
+  unsigned char x509[1000];
+  unsigned int x509Len;
+  ret = GetCertificateFromP12File("../source/rcos.pfx","123456",x509, &x509Len);
+  std::cout << ret << std::endl;
+  printU8((char *)x509, x509Len);
 }

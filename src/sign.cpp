@@ -88,3 +88,38 @@ int GetPriKeyFromP12File(const char* filePath, const char* password, unsigned ch
 
   return 1;
 }
+
+int GetCertificateFromP12File(const char* p12File, const char* password, unsigned char* out, unsigned int* outLen){
+  FILE* p12FilePtr = NULL;
+  PKCS12* p12 = NULL;
+  X509* certificate = NULL;
+  EVP_PKEY* evpPKey = NULL;
+  int ret = -1;
+
+  p12FilePtr = fopen(p12File, "rb");
+  defer(fclose(p12FilePtr));
+  if(p12FilePtr == NULL){
+    return 2;
+  }
+
+  p12 = d2i_PKCS12_fp(p12FilePtr, NULL);
+  defer(PKCS12_free(p12));
+  if(p12 == NULL){
+    return 0;
+  }
+
+  ret = PKCS12_parse(p12, password, &evpPKey, &certificate, NULL);
+  defer(X509_free(certificate));
+  defer(EVP_PKEY_free(evpPKey));
+  if(ret != 1){
+    return 3;
+  }
+
+  unsigned char* tempPtr = out;
+  *outLen = i2d_X509(certificate, &tempPtr);
+  if(out != NULL){
+    out = tempPtr - (*outLen);
+  }
+
+  return 1;
+}

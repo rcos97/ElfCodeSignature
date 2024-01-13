@@ -40,6 +40,17 @@ int GetPublicKeyFromCertificate(const char* filePath, unsigned char* out);
 FBC_API_PUBLIC
 int GetPriKeyFromP12File(const char* filePath, const char* password, unsigned char* out, unsigned int* outLen);
 
+/**
+ * @brief Get the Certificate From P 1 2 File object
+ *   从P12文件中获取证书，der格式
+ * @param p12File p12文件路径
+ * @param password p12文件的密码
+ * @param out 证书
+ * @param outLen 证书长度
+ * @return FBC_API_PUBLIC 
+ */
+FBC_API_PUBLIC
+int GetCertificateFromP12File(const char* p12File, const char* password, unsigned char* out, unsigned int* outLen);
 #ifdef __cplusplus
 }
 #endif
