@@ -43,4 +43,9 @@ int main(int argc, char const* argv[]){
   ret = GetCertificateFromP12File("../source/rcos.pfx","123456",x509, &x509Len);
   std::cout << ret << std::endl;
   printU8((char *)x509, x509Len);
+
+  char pem[1000];
+  unsigned int pemLen;
+  X509Der2Pem((const char*)x509, x509Len,pem, &pemLen);
+  std::cout << pem << std::endl;
 }

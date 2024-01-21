@@ -51,6 +51,9 @@ int GetPriKeyFromP12File(const char* filePath, const char* password, unsigned ch
  */
 FBC_API_PUBLIC
 int GetCertificateFromP12File(const char* p12File, const char* password, unsigned char* out, unsigned int* outLen);
+
+FBC_API_PUBLIC
+int X509Der2Pem(const char* in, const unsigned int inLen, char*out, unsigned int* outLen);
 #ifdef __cplusplus
 }
 #endif

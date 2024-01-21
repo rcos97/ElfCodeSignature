@@ -123,3 +123,42 @@ int GetCertificateFromP12File(const char* p12File, const char* password, unsigne
 
   return 1;
 }
+
+int X509Der2Pem(const char* in, const unsigned int inLen, char*out, unsigned int* outLen){
+  X509* x509 = NULL;
+  BIO* bio = NULL;
+  void* ptr = NULL;
+  size_t pemLen = 0;
+  int ret = -1;
+
+  if(in == NULL || outLen == NULL|| inLen <= 0){
+    return 0;
+  }
+
+  x509 = d2i_X509(NULL, (const unsigned char**)&in, inLen);
+  defer(X509_free(x509));
+  if(x509 == NULL){
+    return 0;
+  }
+
+  bio = BIO_new(BIO_s_mem());
+  defer(BIO_free(bio));
+  if(bio == NULL){
+    return 0;
+  }
+
+  ret = PEM_write_bio_X509(bio, x509);
+  if(ret != 1){
+    return ret;
+  }
+
+  pemLen = BIO_ctrl_pending(bio);
+  *outLen = pemLen;
+
+  if(out != NULL){
+    ret = BIO_ctrl(bio, BIO_CTRL_INFO, 0, &ptr);
+    memcpy(out, ptr, pemLen);
+  }
+
+  return 1;
+}
