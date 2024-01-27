@@ -130,7 +130,7 @@ int GetCertificateFromP12(const char* in, const unsigned int inLen, const char* 
   int ret = -1;
 
   defer(BIO_free(p12Bio));
-  
+
   if(!BIO_write(p12Bio, in, inLen)){
     return 0;
   }
@@ -230,3 +230,57 @@ int X509Pem2Der(const char* in, const unsigned int inLen, char*out, unsigned int
 
   return 1;
 }
+
+const EVP_MD* EnumDigestAlg(const DigestAlg enumValue){
+  switch (enumValue)
+  {
+    case DigestAlg::md5:
+      return EVP_md5();
+    break;
+    case DigestAlg::sha1:
+      return EVP_sha1();
+    break;
+    case DigestAlg::sha256:
+      return EVP_sha256();
+    break;
+    case DigestAlg::sha512:
+      return EVP_sha512();
+    break;
+    case DigestAlg::sm3:
+      return EVP_sm3();
+    break;
+  }
+
+  return NULL;
+}
+
+int Digest(const char* in, const unsigned int inLen, const DigestAlg alg, char* out, unsigned int* outLen){
+    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+    const EVP_MD* md = NULL;
+    defer(EVP_MD_CTX_free(mdctx));
+
+    if(in == NULL || outLen == NULL){
+      return 0;
+    }
+
+    if (!mdctx) {
+      return 0;
+    }
+
+    md = EnumDigestAlg(alg);
+
+    if(md != NULL && out == NULL){
+      *outLen = EVP_MD_size(md);
+      return 1;
+    }
+
+    if (!md||
+        !EVP_DigestInit_ex(mdctx, (EVP_MD*)md, nullptr)||
+        !EVP_DigestUpdate(mdctx, in, inLen)||
+        !EVP_DigestFinal_ex(mdctx, (unsigned char*)out, outLen)){
+        return 0;
+    }
+
+    return 1;
+}
+

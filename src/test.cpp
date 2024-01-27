@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string.h>
 #include "elfSignatureApi.h"
 
 void printU8(char* out, unsigned int len){
@@ -63,4 +64,11 @@ int main(int argc, char const* argv[]){
   unsigned int pemLen;
   X509Der2Pem((const char*)x509, x509Len,pem, &pemLen);
   std::cout << pem << std::endl;
+  
+  char digestInput[] = "1234";
+  char digestOut[32] = {0};
+  unsigned int digestOutLen;
+  Digest(digestInput, strlen(digestInput), DigestAlg::sm3, digestOut, &digestOutLen);
+  std::cout << "digest value:"<< std::endl;
+  printU8((char *)digestOut, digestOutLen);
 }

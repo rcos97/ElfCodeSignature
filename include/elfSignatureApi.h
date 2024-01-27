@@ -18,6 +18,14 @@ extern "C" {
 #define FBC_API_PUBLIC __declspec(dllexport)
 #endif  //_linux
 
+enum DigestAlg{
+  md5,
+  sha1,
+  sha256,
+  sha512,
+  sm3
+};
+
 FBC_API_PUBLIC
 int ReadElfSection(const char* elfName, const char* sectionName, char* out, unsigned int* outLen);
 
@@ -69,6 +77,10 @@ int X509Der2Pem(const char* in, const unsigned int inLen, char*out, unsigned int
 
 FBC_API_PUBLIC
 int X509Pem2Der(const char* in, const unsigned int inLen, char*out, unsigned int* outLen);
+
+FBC_API_PUBLIC
+int Digest(const char* in, const unsigned int inLen, const DigestAlg alg, char* out, unsigned int* outLen);
+
 #ifdef __cplusplus
 }
 #endif
