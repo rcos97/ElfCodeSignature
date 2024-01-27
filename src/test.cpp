@@ -26,22 +26,37 @@ int main(int argc, char const* argv[]){
 
   AddElfSection("../source/libtest.so", ".aaa", "liba.so", out, textLen);
   AddElfSection("../source/liba.so", ".zzz", "liba.so", out, textLen);
+
+  std::cout <<"********************************** sign ***********************************************"<<std::endl;
   unsigned char pub[65];
-  GetPublicKeyFromCertificate("../source/certificate.crt", pub);
+  char certificateFile[2048] = {0};
+  unsigned int certificateFileLen = 0;
+  GetBuffFromFile("../source/certificate.crt", certificateFile, &certificateFileLen);
+  std:: cout << "read certificate :"<<std::endl;
+  printU8(certificateFile, certificateFileLen);
+  char certificateDer[2048] = {0};
+  unsigned int certificateDerLen = 0;
+  X509Pem2Der(certificateFile, certificateFileLen, certificateDer, &certificateDerLen);
+  std:: cout << "certificate der :"<<std::endl;
+  printU8(certificateDer, certificateDerLen);
+  GetPublicKeyFromCertificate(certificateDer, certificateDerLen, pub);
   std:: cout << "publickey :"<<std::endl;
   printU8((char*)pub, 65);
 
+  std:: cout <<"read file:"<<std:: endl;
+  char p12File[2048] = {0};
+  unsigned int p12FileLen = 0;
+  ret = GetBuffFromFile("../source/rcos.pfx", p12File, &p12FileLen);
+  printU8((char *)p12File, p12FileLen);
   unsigned char prikey[255];
   unsigned int priLen;
-  ret = GetPriKeyFromP12File("../source/rcos.pfx","123456",prikey, &priLen);
-  std::cout << ret << std::endl;
+  ret = GetPriKeyFromP12(p12File,p12FileLen,"123456",prikey, &priLen);
+  std:: cout <<"p12 get prikey:"<<std:: endl;
   printU8((char *)prikey, priLen);
-
   std::cout << "p12 get certificate:"<< std::endl;
   unsigned char x509[1000];
   unsigned int x509Len;
-  ret = GetCertificateFromP12File("../source/rcos.pfx","123456",x509, &x509Len);
-  std::cout << ret << std::endl;
+  ret = GetCertificateFromP12(p12File, p12FileLen,"123456",x509, &x509Len);
   printU8((char *)x509, x509Len);
 
   char pem[1000];

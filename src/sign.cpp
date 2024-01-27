@@ -1,27 +1,60 @@
 #include <vector>
 #include <memory.h>
+#include <fstream>
 #include "openssl/x509.h"
 #include "openssl/pem.h"
 #include "openssl/pkcs12.h"
 #include "elfSignatureApi.h"
 #include "defer.h"
 
+int GetBuffFromFile(const char* fileName, char* out, unsigned int* outLen){
+  std::ifstream file(fileName); // 打开文件
+
+  if (!file.is_open()) {
+      return 0;
+  }
+
+  // 获取文件长度
+  file.seekg(0, std::ios::end);
+  std::streampos length = file.tellg();
+  *outLen = length;
+  if(out == NULL){
+    return 1;
+  }
+
+  file.seekg(0, std::ios::beg);
+
+  // 读取文件内容到char数组中
+  file.read(out, length);
+
+  if (!file) {
+    return 0;
+  }
+
+  // 关闭文件
+  file.close();
+
+  return 1;
+}
+
 // 读取X509证书的公钥
-int GetPublicKeyFromCertificate(const char* filePath, unsigned char* out){
+int GetPublicKeyFromCertificate(const char* in, const unsigned int inLen, unsigned char* out){
   EVP_PKEY* publicKey = nullptr;
   X509* cert = nullptr;
   std::vector<unsigned char> publicKeyBytes;
   size_t length;
-  FILE* file = fopen(filePath, "rb");
-  if (file) {
-    cert = PEM_read_X509(file, nullptr, nullptr, nullptr);
-    fclose(file);
+
+  if(in == NULL){
+    return 0;
   }
 
-  if (cert) {
-    publicKey = X509_get_pubkey(cert);
-    X509_free(cert);
+  cert = d2i_X509(NULL, (const unsigned char **)&in, inLen);
+  if(!cert){
+    return 0;
   }
+
+  publicKey = X509_get_pubkey(cert);
+  X509_free(cert);
 
   EC_KEY* ecKey = EVP_PKEY_get1_EC_KEY(publicKey);
   if (ecKey) {
@@ -49,24 +82,24 @@ int GetPublicKeyFromCertificate(const char* filePath, unsigned char* out){
   return 1;
 }
 
-int GetPriKeyFromP12File(const char* filePath, const char* password, unsigned char* out, unsigned int* outLen){
-  FILE* p12_file_ptr;
+int GetPriKeyFromP12(const char* in, const unsigned inlen, const char* password, unsigned char* out, unsigned int* outLen){
   EVP_PKEY* evpPkey = NULL;
   EC_KEY* ecKey = NULL;
   const BIGNUM* priNUM;
+  BIO* p12Bio = BIO_new(BIO_s_mem());
   int ret = 0;
 
-  if(filePath == NULL || password == NULL || outLen == NULL){
+  defer(BIO_free(p12Bio));
+
+  if(in == NULL || password == NULL || outLen == NULL){
     return 0;
   }
 
-  p12_file_ptr = fopen(filePath, "rb");
-  defer(fclose(p12_file_ptr));
-  if(!p12_file_ptr){
-    return 2;
+  if(!BIO_write(p12Bio, in, inlen)){
+    return 0;
   }
 
-  PKCS12* p12 = d2i_PKCS12_fp(p12_file_ptr, NULL);
+  PKCS12* p12 = d2i_PKCS12_bio(p12Bio,NULL);
   defer(PKCS12_free(p12));
   ret = PKCS12_parse(p12, password, &evpPkey, NULL, NULL);
   defer(EVP_PKEY_free(evpPkey));
@@ -89,20 +122,20 @@ int GetPriKeyFromP12File(const char* filePath, const char* password, unsigned ch
   return 1;
 }
 
-int GetCertificateFromP12File(const char* p12File, const char* password, unsigned char* out, unsigned int* outLen){
-  FILE* p12FilePtr = NULL;
+int GetCertificateFromP12(const char* in, const unsigned int inLen, const char* password, unsigned char* out, unsigned int* outLen){
   PKCS12* p12 = NULL;
   X509* certificate = NULL;
   EVP_PKEY* evpPKey = NULL;
+  BIO* p12Bio = BIO_new(BIO_s_mem());
   int ret = -1;
 
-  p12FilePtr = fopen(p12File, "rb");
-  defer(fclose(p12FilePtr));
-  if(p12FilePtr == NULL){
-    return 2;
+  defer(BIO_free(p12Bio));
+  
+  if(!BIO_write(p12Bio, in, inLen)){
+    return 0;
   }
 
-  p12 = d2i_PKCS12_fp(p12FilePtr, NULL);
+  p12 = d2i_PKCS12_bio(p12Bio, NULL);
   defer(PKCS12_free(p12));
   if(p12 == NULL){
     return 0;
@@ -158,6 +191,41 @@ int X509Der2Pem(const char* in, const unsigned int inLen, char*out, unsigned int
   if(out != NULL){
     ret = BIO_ctrl(bio, BIO_CTRL_INFO, 0, &ptr);
     memcpy(out, ptr, pemLen);
+  }
+
+  return 1;
+}
+
+int X509Pem2Der(const char* in, const unsigned int inLen, char*out, unsigned int* outLen){
+  X509* x509 = NULL;
+  BIO* x509Bio = BIO_new(BIO_s_mem());
+  int ret = -1;
+
+  defer(BIO_free(x509Bio));
+  if(in == NULL || outLen == NULL|| inLen <= 0){
+    return 0;
+  }
+
+  if(!BIO_write(x509Bio, in, inLen)){
+    return 0;
+  }
+
+  x509 = PEM_read_bio_X509(x509Bio, NULL, NULL, NULL);
+  if(x509 == NULL){
+    return 0;
+  }
+
+  *outLen = i2d_X509(x509, NULL);
+  if(*outLen <= 0){
+    return 0;
+  }
+  if(out == NULL){
+    return 1;
+  }
+
+  *outLen = i2d_X509(x509, (unsigned char **)&out);
+  if(*outLen <= 0){
+    return 0;
   }
 
   return 1;
